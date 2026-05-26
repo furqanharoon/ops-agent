@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.tools import get_cpu_usage
+from app.registry import tool_registry
+from app.planner import decide_tool
+
 
 app = FastAPI()
 
@@ -17,14 +19,18 @@ async def health_check():
 @app.post("/agent/run")
 async def run_agent(request: AgentRequest):
   query = request.query.lower()
-
-  if "cpu" in query:
-    tool_result = await get_cpu_usage(server_name="web-1")
+  tool_decider = decide_tool(query)
+  if tool_decider:
+    tool_name = tool_decider["tool_name"]
+    tool_arguments = tool_decider["arguments"]
+    tool = tool_registry[tool_name]
+    tool_result = await tool(**tool_arguments)
     return {
       "query": request.query,
-      "tool_used": "get_cpu_usage",
+      "decision": tool_decider,
       "tool_result": tool_result
     }
-  return {
-    "message": "No matching tool found."
-  }
+  else:
+    return {
+      "message": "No Matching Tool was found."
+    }
