@@ -1,7 +1,7 @@
 from app.logger import log_event
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 
-anthropic_client = Anthropic()
+anthropic_client = AsyncAnthropic()
 
 TOOLS=[
   {
@@ -32,19 +32,13 @@ TOOLS=[
   }
 ]
 
-def decide_tool(query:str):
-  query = query.lower()
-  llm_response = anthropic_client.messages.create(
+async def decide_tool(messages:list):
+  llm_response = await anthropic_client.messages.create(
     model="claude-sonnet-4-5",
     max_tokens=300,
     system="You are a helpful AI assistant. You job is to ONLY use the tool at your disposal. Pleae make sure to not use anyother external or hallucinate anyother requirements. If you don't find anything using the GIVEN tools just reply 'I wasn't able to find anything using the provided tools'",
     tools=TOOLS,
-    messages=[
-      {
-        "role": "user",
-        "content": query
-      }
-    ]
+    messages=messages
   )
   llm_content = llm_response.content
 
@@ -56,27 +50,4 @@ def decide_tool(query:str):
     if block.type == 'tool_use':
       tool_use = block
       break
-
-
-  # for block in llm
-
-
-  # if "cpu" in query:
-  #   decision = {
-  #     "tool": "get_cpu_usage",
-  #     "arguments": {
-  #       "server_name": "web-1"
-  #     }
-  #   }
-  #   log_event("planner_decision", decision)
-  #   return decision
-  # if "restart" in query:
-  #   decision = {
-  #     "tool_name": "restart_service",
-  #     "arguments": {
-  #       "service_name": "nginx"
-  #     }
-  #   }
-  #   log_event("planner_decision", decision)
-  #   return decision
-  # return None
+  return tool_use
