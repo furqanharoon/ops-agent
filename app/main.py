@@ -40,9 +40,7 @@ async def run_agent(request: AgentRequest):
   while state.current_iteration < MAX_ITERATIONS:
     log_event("iteration_started",{"iteration": state.current_iteration})
     tool_decider = await decide_tool(messages)
-    print("\n tool_decider \n", tool_decider)
     if tool_decider:
-      print("Tool decider details", tool_decider.name)
       tool_name = tool_decider.name
       tool_arguments = tool_decider.input
       tool = tool_registry[tool_name]
