@@ -48,7 +48,11 @@ async def run_agent_execution(query):
       tool = tool_registry[tool_name]
       yield {
         "event": "tool_exection",
-        "data": f"Executing {tool_name}"
+        "data":
+        {
+          "tool_name": tool_name,
+          "tool_arguments": tool_arguments
+        }
       }
       start_time = time.perf_counter()
       tool_result = await tool(**tool_arguments)
