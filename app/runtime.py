@@ -1,5 +1,6 @@
 import asyncio
 import time
+import uuid
 from pydantic import BaseModel
 from app.registry import tool_registry
 from app.planner import decide_tool
@@ -8,6 +9,7 @@ from app.logger import log_event
 MAX_ITERATIONS = 5
 class AgentState(BaseModel):
   user_query: str
+  trace_id: str = str(uuid.uuid4())
   current_iteration: int = 0
   tool_history: list = []
   observations: list = []
@@ -18,7 +20,10 @@ class AgentState(BaseModel):
   total_tokens: int = 0
 
 async def run_agent_execution(query):
-  state = AgentState(user_query=query)
+  state = AgentState(
+    user_query=query,
+    trace_id=str(uuid.uuid4())
+  )
   messages = [
     {
       "role": "user",
@@ -123,7 +128,7 @@ async def run_agent_execution(query):
   }
 
 async def run_agent_execution_debug(query):
-  state = AgentState(user_query=query)
+  state = AgentState(user_query=query,trace_id=str(uuid.uuid4()))
   messages = [
     {
       "role": "user",
@@ -149,6 +154,7 @@ async def run_agent_execution_debug(query):
     log_event(
       "tool_execution",
       {
+        "trace_id": state.trace_id,
         "tool_name": tool_name,
         "arguments": tool_arguments,
         "tool_result": tool_result,
@@ -175,6 +181,7 @@ async def run_agent_execution_debug(query):
     state.current_iteration+=1
   
   return {
+    "trace_id": state.trace_id,
     "query": query,
     "final_response": state.final_response,
     "state": state
