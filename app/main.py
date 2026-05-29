@@ -25,7 +25,6 @@ async def health_check():
 @app.post("/agent/run")
 async def run_agent(request: AgentRequest):
   query = request.query
-  print("\n QUERYYYYYY \n", query)
   result = await run_agent_execution_debug(query)
   return result
 

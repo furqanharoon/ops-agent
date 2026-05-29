@@ -132,23 +132,16 @@ async def run_agent_execution_debug(query):
   ]
   while state.current_iteration < MAX_ITERATIONS:
     log_event("iteration_started",{"iteration": state.current_iteration})
-    print("\n\n MESSAGES \n\n", messages)
     tool_response = await decide_tool(messages)
-    tool_decider = tool_response['tool_use']
-    state.total_input_tokens+=tool_response['input_tokens']
-    state.total_output_tokens+=tool_response['output_tokens']
+    state.total_input_tokens+=tool_response.input_tokens
+    state.total_output_tokens+=tool_response.output_tokens
     state.total_tokens=(state.total_input_tokens+state.total_output_tokens)
     state.llm_calls+=1
-
-    print("\n\ntool_decider\n\n", tool_decider)
-    if not tool_decider:
-      state.final_response = "No action required"
-      return {
-        "message": "No Matching Tool was found."
-      }
-
-    tool_name = tool_decider.name
-    tool_arguments = tool_decider.input
+    if tool_response.action == "final":
+      state.final_response = tool_response.final_response
+      break
+    tool_name = tool_response.tool_name
+    tool_arguments = tool_response.tool_arguments
     tool = tool_registry[tool_name]
     start_time = time.perf_counter()
     tool_result = await tool(**tool_arguments)
@@ -183,10 +176,6 @@ async def run_agent_execution_debug(query):
   
   return {
     "query": query,
-    "decision":{
-      "tool_name": tool_name,
-      "tool_arguments": tool_arguments
-    },
-    "tool_result": tool_result,
+    "final_response": state.final_response,
     "state": state
   }

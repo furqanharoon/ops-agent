@@ -1,7 +1,17 @@
 from app.logger import log_event
+from pydantic import BaseModel
 from anthropic import AsyncAnthropic
 
 anthropic_client = AsyncAnthropic()
+
+class PlannerDecision(BaseModel):
+  action:str
+  tool_name:str | None = None
+  tool_arguments:dict | None = None
+  final_response:str | None = None
+  input_tokens:int = 0
+  output_tokens:int = 0
+
 
 TOOLS=[
   {
@@ -50,8 +60,20 @@ async def decide_tool(messages:list):
     if block.type == 'tool_use':
       tool_use = block
       break
-  return {
-    "tool_use": tool_use,
-    "input_tokens": llm_response.usage.input_tokens,
-    "output_tokens": llm_response.usage.output_tokens
-  }
+  
+  if tool_use:
+    return PlannerDecision(
+      action="tool",
+      tool_name=tool_use.name,
+      tool_arguments=tool_use.input,
+      input_tokens=llm_response.usage.input_tokens,
+      output_tokens=llm_response.usage.output_tokens
+    )
+  else:
+    text_response = llm_content[0].text
+    return PlannerDecision(
+      action="final",
+      final_response=text_response,
+      input_tokens=llm_response.usage.input_tokens,
+      output_tokens=llm_response.usage.output_tokens
+    )
