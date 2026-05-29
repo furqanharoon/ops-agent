@@ -42,7 +42,7 @@ async def decide_tool(messages:list):
   )
   llm_content = llm_response.content
 
-  print("\n\n LLM CONTENT \n\n", llm_content)
+  print("\n\n LLM RESPONSE \n\n", llm_response)
   
   tool_use = None
 
@@ -50,4 +50,8 @@ async def decide_tool(messages:list):
     if block.type == 'tool_use':
       tool_use = block
       break
-  return tool_use
+  return {
+    "tool_use": tool_use,
+    "input_tokens": llm_response.usage.input_tokens,
+    "output_tokens": llm_response.usage.output_tokens
+  }
