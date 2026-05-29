@@ -94,7 +94,7 @@ async def run_agent_execution(query):
     })
     state.observations.append({
       "tool": tool_name,
-      "observe": tool_result
+      "observation": tool_result
     })
     yield {
       "event": "observation",
@@ -103,6 +103,10 @@ async def run_agent_execution(query):
         "tool_result": tool_result
       }
     }
+    messages.append({
+      "role": "assistant",
+      "content": f"I used tool {tool_name}"
+    })
     messages.append({
       "role": "user",
       "content": f"Tool Result: {tool_result} "
@@ -128,14 +132,15 @@ async def run_agent_execution_debug(query):
   ]
   while state.current_iteration < MAX_ITERATIONS:
     log_event("iteration_started",{"iteration": state.current_iteration})
-  
+    print("\n\n MESSAGES \n\n", messages)
     tool_response = await decide_tool(messages)
     tool_decider = tool_response['tool_use']
     state.total_input_tokens+=tool_response['input_tokens']
     state.total_output_tokens+=tool_response['output_tokens']
-    state.total_tokens=state.total_tokens+(state.total_input_tokens+state.total_output_tokens)
+    state.total_tokens=(state.total_input_tokens+state.total_output_tokens)
     state.llm_calls+=1
 
+    print("\n\ntool_decider\n\n", tool_decider)
     if not tool_decider:
       state.final_response = "No action required"
       return {
@@ -164,7 +169,11 @@ async def run_agent_execution_debug(query):
     })
     state.observations.append({
       "tool": tool_name,
-      "observe": tool_result
+      "observation": tool_result
+    })
+    messages.append({
+      "role": "assistant",
+      "content": f"I used tool {tool_name}"
     })
     messages.append({
       "role": "user",
@@ -174,7 +183,10 @@ async def run_agent_execution_debug(query):
   
   return {
     "query": query,
-    "decision": tool_decider,
+    "decision":{
+      "tool_name": tool_name,
+      "tool_arguments": tool_arguments
+    },
     "tool_result": tool_result,
     "state": state
   }
