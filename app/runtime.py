@@ -35,7 +35,9 @@ async def run_agent_execution(query):
     }
     yield {
       "event": "planner",
-      "data": "Planning next action"
+      "data": {
+        "iteration": state.current_iteration
+      }
     }
     tool_decider = await decide_tool(messages)
     if tool_decider:
@@ -43,7 +45,10 @@ async def run_agent_execution(query):
       tool_arguments = tool_decider.input
       yield {
         "event": "tool_selected",
-        "data": f"Selected Tool: {tool_name}"
+        "data": {
+          "tool_name": tool_name,
+          "tool_arguments": tool_arguments
+        }
       }
       tool = tool_registry[tool_name]
       yield {
@@ -77,7 +82,10 @@ async def run_agent_execution(query):
       })
       yield {
         "event": "observation",
-        "data": f"Observation {tool_result}"
+        "data": {
+          "tool_name": tool_name,
+          "tool_result": tool_result
+        }
       }
       messages.append({
         "role": "user",
