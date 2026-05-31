@@ -45,7 +45,7 @@ async def get_incident_duration(case_id: str):
         }
 
       duration = row[1] - row[0]
-
+      raise Exception("Simulated DB timeout")
       return {
         "case_id": case_id,
         "opened_at": row[0].isoformat(),

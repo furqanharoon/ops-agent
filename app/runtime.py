@@ -156,13 +156,39 @@ async def run_agent_execution_debug(query):
       tool = tools_registry[tool_name]
       tool_arguments = tool_use.input
       start_time = time.perf_counter()
-      tool_result = await tool(**tool_arguments)
-      tool_results.append(
-        {
+      try:
+        tool_result = await tool(**tool_arguments)
+        tool_results.append(
+          {
+            "tool_name":tool_name,
+            "result": tool_result
+          }
+        )
+      except Exception as e:
+        log_event("tool_failure",{
+          "trace_id": state.trace_id,
+          "tool_name": tool_name,
+          "arguments": tool_arguments,
+          "current_iteration": state.current_iteration,
+          "status": "Failed",
+          "error": str(e)
+        })
+        state.tool_history.append({
+          "tool": tool_name,
+          "arguments": tool_arguments,
+          "current_iteration": state.current_iteration,
+          "failure_reason": str(e),
+        })
+        state.observations.append({
+          "tool": tool_name,
+          "status": "Tool Failed",
+          "error": str(e)
+        })
+        tool_results.append({
+          "status": "failed",
           "tool_name":tool_name,
-          "result": tool_result
-        }
-      )
+          "error": str(e)
+        })
       execution_time = time.perf_counter()-start_time
       log_event(
         "tool_execution",
