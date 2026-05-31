@@ -2,7 +2,7 @@ import asyncio
 import time
 import uuid
 from pydantic import BaseModel
-from app.tools.tools_registry import tool_registry
+from app.tools.tools_registry import tools_registry
 from app.planner import decide_tool
 from app.logger import log_event
 
@@ -71,7 +71,7 @@ async def run_agent_execution(query):
         "tool_arguments": tool_arguments
       }
     }
-    tool = tool_registry[tool_name]
+    tool = tools_registry[tool_name]
     yield {
       "event": "tool_exection",
       "data":
@@ -145,38 +145,52 @@ async def run_agent_execution_debug(query):
     if tool_response.action == "final":
       state.final_response = tool_response.final_response
       break
-    tool_name = tool_response.tool_name
-    tool_arguments = tool_response.tool_arguments
-    tool = tool_registry[tool_name]
-    start_time = time.perf_counter()
-    tool_result = await tool(**tool_arguments)
-    execution_time = time.perf_counter()-start_time
-    log_event(
-      "tool_execution",
-      {
-        "trace_id": state.trace_id,
-        "tool_name": tool_name,
+    # Start of LOOP
+    tool_results = []
+    tool_names = []
+    for tool_use in tool_response.tool_uses:
+      # tool_name = tool_response.tool_name
+      # tool_arguments = tool_response.tool_arguments
+      tool_name = tool_use.name
+      tool_names.append(tool_name)
+      tool = tools_registry[tool_name]
+      tool_arguments = tool_use.input
+      start_time = time.perf_counter()
+      tool_result = await tool(**tool_arguments)
+      tool_results.append(
+        {
+          "tool_name":tool_name,
+          "result": tool_result
+        }
+      )
+      execution_time = time.perf_counter()-start_time
+      log_event(
+        "tool_execution",
+        {
+          "trace_id": state.trace_id,
+          "tool_name": tool_name,
+          "arguments": tool_arguments,
+          "tool_result": tool_result,
+          "execution_time_in_ms": execution_time
+        }
+      )
+      state.tool_history.append({
+        "tool": tool_name,
         "arguments": tool_arguments,
-        "tool_result": tool_result,
-        "execution_time_in_ms": execution_time
-      }
-    )
-    state.tool_history.append({
-      "tool": tool_name,
-      "arguments": tool_arguments,
-      "tool_result": tool_result
-    })
-    state.observations.append({
-      "tool": tool_name,
-      "observation": tool_result
-    })
+        "tool_result": tool_result
+      })
+      state.observations.append({
+        "tool": tool_name,
+        "observation": tool_result
+      })
+    ### END OF LOOP
     messages.append({
       "role": "assistant",
-      "content": f"I used tool {tool_name}"
+      "content": f"I used tools {tool_names}"
     })
     messages.append({
       "role": "user",
-      "content": f"Tool Result: {tool_result} "
+      "content": f"Tool Results: {tool_results} "
     })
     state.current_iteration+=1
   
