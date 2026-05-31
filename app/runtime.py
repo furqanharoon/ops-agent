@@ -2,7 +2,7 @@ import asyncio
 import time
 import uuid
 from pydantic import BaseModel
-from app.registry import tool_registry
+from app.tools.tools_registry import tool_registry
 from app.planner import decide_tool
 from app.logger import log_event
 
