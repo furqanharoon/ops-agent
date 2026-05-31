@@ -1,4 +1,5 @@
 from app.logger import log_event
+from app.utils.pretty_print import print_llm_response
 from pydantic import BaseModel
 from anthropic import AsyncAnthropic
 from typing import Any
@@ -68,9 +69,7 @@ async def decide_tool(messages:list):
     messages=messages
   )
   llm_content = llm_response.content
-
-  print("\n\n LLM RESPONSE \n\n", llm_response)
-  
+  print_llm_response(llm_response)
   tool_use = None
   tool_uses = []
   for block in llm_content:
@@ -78,7 +77,7 @@ async def decide_tool(messages:list):
       tool_use = block
       tool_uses.append(block)
       # break
-  print("\n\ntool_uses\n\n", tool_uses)
+
   tool_names=[]
   for tool in tool_uses:
     tool_info = {
@@ -86,9 +85,6 @@ async def decide_tool(messages:list):
       "input": tool.input
     }
     tool_names.append(tool_info)
-
-  print("\n\TOOL NAMES\n\n", tool_names)
-
 
   if tool_uses:
     return PlannerDecision(
