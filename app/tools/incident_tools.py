@@ -1,6 +1,6 @@
 from app.db import get_connection
 
-async def get_incident(case_id):
+async def get_incident(case_id: str):
   conn = get_connection()
   try:
     with conn.cursor() as cursor:
