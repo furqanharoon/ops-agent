@@ -210,6 +210,9 @@ async def run_agent_execution_debug(query):
         "observation": tool_result
       })
     ### END OF LOOP
+    print("\n\nTOOL RESULTS\n\n")
+    print("\n="*80)
+    print(f"\n {tool_results}")
     messages.append({
       "role": "assistant",
       "content": f"I used tools {tool_names}"
