@@ -1,0 +1,43 @@
+[
+  {
+    "id":1,
+    "name": "complex_incident",
+    "query":"Investigate INC24493",
+    "expected_findings": [
+      "level 2 or level 3 support",
+      "mulitple escalations",
+      "duration > 2 days and < 3 days",
+      "customer not satisfied"
+    ],
+    "expected":{
+      "final_resolver": "sarah",
+      "customer_satisfaction": 1,
+      "total_personnel": 7
+    }
+  },
+  {
+    "id":2,
+    "name": "missing_incident",
+    "query": "Investigate INC_DOES_NOT_EXIST",
+    "expected_findings": [
+      "not found"
+    ],
+    "expected":{
+      "error": "Incident not found"
+    }
+  },
+  {
+    "id":3,
+    "name": "simple_incident",
+    "query": "Investigate INC2123",
+    "expected_findings": [
+      "resolved"
+    ],
+    "expected":{
+      "final_resolver": "sarah",
+      "customer_satisfaction": 2,
+      "number_of_handoffs": 3,
+      "total_personnel": 4
+    }
+  }
+]
