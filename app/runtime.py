@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from app.tools.tools_registry import tools_registry
 from app.planner import decide_tool
 from app.logger import log_event
+from app.utils.fetch_tool_result import get_tool_result
 
 MAX_ITERATIONS = 5
 class AgentState(BaseModel):
@@ -210,8 +211,12 @@ async def run_agent_execution_debug(query):
         "observation": tool_result
       })
     ### END OF LOOP
+    incident = get_tool_result(tool_results, "get_incident")
+    duration = get_tool_result(tool_results, "get_incident_duration")
+    timeline = get_tool_result(tool_results, "get_incident_timeline")
+
     print("\n\nTOOL RESULTS\n\n")
-    print("\n="*80)
+    print("="*80)
     print(f"\n {tool_results}")
     messages.append({
       "role": "assistant",
@@ -227,5 +232,8 @@ async def run_agent_execution_debug(query):
     "trace_id": state.trace_id,
     "query": query,
     "final_response": state.final_response,
-    "state": state
+    "state": state,
+    "incident": incident,
+    "duration": duration,
+    "timeline": timeline
   }
