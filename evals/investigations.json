@@ -12,7 +12,8 @@
     "expected":{
       "final_resolver": "sarah",
       "customer_satisfaction": 1,
-      "total_personnel": 7
+      "total_personnel": 7,
+      "number_of_handoffs": 9
     }
   },
   {
@@ -23,7 +24,7 @@
       "not found"
     ],
     "expected":{
-      "error": "Incident not found"
+      "error_message": "Incident not found"
     }
   },
   {
