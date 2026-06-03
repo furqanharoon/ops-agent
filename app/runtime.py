@@ -19,114 +19,7 @@ class AgentState(BaseModel):
   total_input_tokens: int = 0
   total_output_tokens: int = 0
   total_tokens: int = 0
-
-async def run_agent_execution(query):
-  state = AgentState(
-    user_query=query,
-    trace_id=str(uuid.uuid4())
-  )
-  messages = [
-    {
-      "role": "user",
-      "content": query
-    }
-  ]
-  yield {
-    "event": "status",
-    "data": "Agent execution started"
-  }
-  while state.current_iteration < MAX_ITERATIONS:
-    log_event("iteration_started",{"iteration": state.current_iteration})
-    yield {
-      "event": "iteration",
-      "data": f"iteration count: {state.current_iteration}"
-    }
-    yield {
-      "event": "planner",
-      "data": {
-        "iteration": state.current_iteration
-      }
-    }
-    tool_response = await decide_tool(messages)
-    tool_decider = tool_response['tool_use']
-    state.total_input_tokens+=tool_response['input_tokens']
-    state.total_output_tokens+=tool_response['output_tokens']
-    state.total_tokens=state.total_tokens+(state.total_input_tokens+state.total_output_tokens)
-    state.llm_calls+=1
-
-    if not tool_decider:
-      state.final_response = "No action required"
-      yield {
-        "event": "final_response",
-        "data": {
-          "message": "No action required"
-        }
-      }
-
-    tool_name = tool_decider.name
-    tool_arguments = tool_decider.input
-    yield {
-      "event": "tool_selected",
-      "data": {
-        "tool_name": tool_name,
-        "tool_arguments": tool_arguments
-      }
-    }
-    tool = tools_registry[tool_name]
-    yield {
-      "event": "tool_exection",
-      "data":
-      {
-        "tool_name": tool_name,
-        "tool_arguments": tool_arguments
-      }
-    }
-    start_time = time.perf_counter()
-    tool_result = await tool(**tool_arguments)
-    execution_time = time.perf_counter()-start_time
-    log_event(
-      "tool_execution",
-      {
-        "tool_name": tool_name,
-        "arguments": tool_arguments,
-        "tool_result": tool_result,
-        "execution_time_in_ms": execution_time
-      }
-    )
-    state.tool_history.append({
-      "tool": tool_name,
-      "arguments": tool_arguments,
-      "tool_result": tool_result
-    })
-    state.observations.append({
-      "tool": tool_name,
-      "observation": tool_result
-    })
-    yield {
-      "event": "observation",
-      "data": {
-        "tool_name": tool_name,
-        "tool_result": tool_result
-      }
-    }
-    messages.append({
-      "role": "assistant",
-      "content": f"I used tool {tool_name}"
-    })
-    messages.append({
-      "role": "user",
-      "content": f"Tool Result: {tool_result} "
-    })
-    state.current_iteration+=1
-  yield {
-    "event": "completed",
-    "data": {
-      "iterations": state.current_iteration,
-      "query": query,
-      "tool_history": state.tool_history,
-      "observations": state.observations
-    }
-  }
+  messages: list = []
 
 async def run_agent_execution_debug(query):
   state = AgentState(user_query=query,trace_id=str(uuid.uuid4()))
@@ -136,9 +29,17 @@ async def run_agent_execution_debug(query):
       "content": query
     }
   ]
+  state.messages.append({
+    "role": "user",
+    "content": query
+  })
   while state.current_iteration < MAX_ITERATIONS:
     log_event("iteration_started",{"iteration": state.current_iteration})
     tool_response = await decide_tool(messages)
+    print("\n" + "=" * 80)
+    print("THOUGHT")
+    print("=" * 80)
+    print(tool_response.thought)
     state.total_input_tokens+=tool_response.input_tokens
     state.total_output_tokens+=tool_response.output_tokens
     state.total_tokens=(state.total_input_tokens+state.total_output_tokens)
@@ -159,12 +60,23 @@ async def run_agent_execution_debug(query):
       start_time = time.perf_counter()
       try:
         tool_result = await tool(**tool_arguments)
+        tool_result_dict = {
+          "tool_name":tool_name,
+          "result": tool_result
+        }
         tool_results.append(
+          tool_result_dict
+        )
+        state.messages.append(
           {
-            "tool_name":tool_name,
-            "result": tool_result
+            "role": "user",
+            "content": f"Observation : {tool_result_dict}"
           }
         )
+        messages.append({
+          "role": "user",
+          "content": f"Observation : {tool_result_dict}"
+        })
       except Exception as e:
         log_event("tool_failure",{
           "trace_id": state.trace_id,
@@ -215,17 +127,13 @@ async def run_agent_execution_debug(query):
     duration = get_tool_result(tool_results, "get_incident_duration")
     timeline = get_tool_result(tool_results, "get_incident_timeline")
 
+    print("\n\n state.messages", state.messages)
+
+
+
     print("\n\nTOOL RESULTS\n\n")
     print("="*80)
     print(f"\n {tool_results}")
-    messages.append({
-      "role": "assistant",
-      "content": f"I used tools {tool_names}"
-    })
-    messages.append({
-      "role": "user",
-      "content": f"Tool Results: {tool_results} "
-    })
     state.current_iteration+=1
   
   return {

@@ -14,6 +14,7 @@ class PlannerDecision(BaseModel):
   tool_uses: list[Any] = []
   input_tokens:int = 0
   output_tokens:int = 0
+  thought:str = ""
 
 TOOLS = [
   {
@@ -61,10 +62,27 @@ TOOLS = [
 
 
 async def decide_tool(messages:list):
+  # system_prompt = f"""
+  #   You are a AI investigative agent.
+  #   You may call ONE tool at a time.
+  #   Before choosing another TOOL, review the observations already gathered. 
+  #   Do not CALL a tool if its result already exist in the observation.
+  #   If you have enough information to answer the user's question, do not CALL any further tool and provide the final.
+  # """
+  system_prompt = f"""
+    You are a AI investigative agent.
+    You may call ONE tool per response.
+    Never request multiple tools at ONCE.
+    Before choosing another TOOL, review the observations already gathered.
+    After receiving an observation, decide the single next best tool.
+    Do not CALL a tool if its result already exist in the observation.
+    If you have enough information to answer the user's question, do not CALL any further tool and provide the final answer.
+  """
   llm_response = await anthropic_client.messages.create(
     model="claude-sonnet-4-5",
     max_tokens=1000,
-    system="You are a helpful AI assistant. You job is to ONLY use the tool at your disposal. Pleae make sure to not use anyother external or hallucinate anyother requirements. If you don't find anything using the GIVEN tools just reply 'I wasn't able to find anything using the provided tools'",
+    # system="You are a helpful AI assistant. You job is to ONLY use the tool at your disposal. Pleae make sure to not use anyother external or hallucinate anyother requirements. If you don't find anything using the GIVEN tools just reply 'I wasn't able to find anything using the provided tools'",
+    system=system_prompt,
     tools=TOOLS,
     messages=messages
   )
@@ -72,11 +90,13 @@ async def decide_tool(messages:list):
   print_llm_response(llm_response)
   tool_use = None
   tool_uses = []
+  thought = ""
   for block in llm_content:
+    if block.type == 'text':
+      thought+=block.text
     if block.type == 'tool_use':
       tool_use = block
       tool_uses.append(block)
-      # break
 
   tool_names=[]
   for tool in tool_uses:
@@ -87,11 +107,12 @@ async def decide_tool(messages:list):
     tool_names.append(tool_info)
 
   if tool_uses:
+    single_tool = tool_uses[0]
     return PlannerDecision(
       action="tool",
-      # tool_name=tool_use.name,
-      # tool_arguments=tool_use.input,
-      tool_uses=tool_uses,
+      # tool_uses=tool_uses,
+      thought=thought,
+      tool_uses=[single_tool],
       input_tokens=llm_response.usage.input_tokens,
       output_tokens=llm_response.usage.output_tokens
     )
@@ -99,6 +120,7 @@ async def decide_tool(messages:list):
     text_response = llm_content[0].text
     return PlannerDecision(
       action="final",
+      thought=thought,
       final_response=text_response,
       input_tokens=llm_response.usage.input_tokens,
       output_tokens=llm_response.usage.output_tokens
