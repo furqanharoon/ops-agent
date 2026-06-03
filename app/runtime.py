@@ -127,10 +127,6 @@ async def run_agent_execution_debug(query):
     duration = get_tool_result(tool_results, "get_incident_duration")
     timeline = get_tool_result(tool_results, "get_incident_timeline")
 
-    print("\n\n state.messages", state.messages)
-
-
-
     print("\n\nTOOL RESULTS\n\n")
     print("="*80)
     print(f"\n {tool_results}")
