@@ -126,10 +126,6 @@ async def run_agent_execution_debug(query):
     incident = get_tool_result(tool_results, "get_incident")
     duration = get_tool_result(tool_results, "get_incident_duration")
     timeline = get_tool_result(tool_results, "get_incident_timeline")
-
-    print("\n\nTOOL RESULTS\n\n")
-    print("="*80)
-    print(f"\n {tool_results}")
     state.current_iteration+=1
   
   return {
