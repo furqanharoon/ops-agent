@@ -36,10 +36,6 @@ async def run_agent_execution_debug(query):
   while state.current_iteration < MAX_ITERATIONS:
     log_event("iteration_started",{"iteration": state.current_iteration})
     tool_response = await decide_tool(messages)
-    print("\n" + "=" * 80)
-    print("THOUGHT")
-    print("=" * 80)
-    print(tool_response.thought)
     state.total_input_tokens+=tool_response.input_tokens
     state.total_output_tokens+=tool_response.output_tokens
     state.total_tokens=(state.total_input_tokens+state.total_output_tokens)
