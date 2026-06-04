@@ -2,6 +2,7 @@ import json
 import asyncio
 from app.runtime import run_agent_execution_debug
 from app.services.facts_extractor import build_investigation_facts
+from app.services.analyzer import analyze_incident
 from evals.scoring import compare_facts
 
 results = []
@@ -23,6 +24,9 @@ for test_case in test_cases:
     print("\n\n RESPONSEEEE", response)
     facts = build_investigation_facts(response["incident"], response["duration"], response["timeline"])
     print("\n\n FACTSSSSSS", facts)
+    if facts.case_id:
+      analyzer = analyze_incident(facts)
+      print("\n\n ANALYZER RESULTS", analyzer)
     comparison = compare_facts(test_case.get("expected"), facts)
     print("\n COMPARISON VALUESSS \n", comparison.values())
     for result in comparison.values():
