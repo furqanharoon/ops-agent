@@ -4,6 +4,8 @@ from app.runtime import run_agent_execution_debug
 from app.services.facts_extractor import build_investigation_facts
 from app.services.analyzer import analyze_incident
 from app.services.report_generator import generate_report
+from app.services.human_review import request_human_approval
+from app.services.approval import requires_human_approval
 from evals.scoring import compare_facts
 
 
@@ -29,6 +31,10 @@ for test_case in test_cases:
     if facts.case_id:
       analyzer = analyze_incident(facts)
       print("\n\n ANALYZER RESULTS", analyzer)
+      if requires_human_approval(analyzer):
+        if not request_human_approval():
+          print("\n\n Human didn't approve report generation")
+          exit()
       report_output = generate_report(facts, analyzer)
       print("\n\n report_output", report_output)
     comparison = compare_facts(test_case.get("expected"), facts)
