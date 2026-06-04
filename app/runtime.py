@@ -1,7 +1,7 @@
 import asyncio
 import time
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from app.tools.tools_registry import tools_registry
 from app.planner import decide_tool
 from app.logger import log_event
@@ -12,14 +12,15 @@ class AgentState(BaseModel):
   user_query: str
   trace_id: str = str(uuid.uuid4())
   current_iteration: int = 0
-  tool_history: list = []
-  observations: list = []
   final_response: str | None = None
   llm_calls: int = 0
   total_input_tokens: int = 0
   total_output_tokens: int = 0
   total_tokens: int = 0
-  messages: list = []
+  tool_history: list = Field(default_factory=list)
+  observations: list = Field(default_factory=list)
+  messages: list = Field(default_factory=list)
+  memory: dict = Field(default_factory=dict)
 
 async def run_agent_execution_debug(query):
   state = AgentState(user_query=query,trace_id=str(uuid.uuid4()))
@@ -56,6 +57,17 @@ async def run_agent_execution_debug(query):
       start_time = time.perf_counter()
       try:
         tool_result = await tool(**tool_arguments)
+        if tool_name == 'get_incident':
+          state.memory['incident'] = tool_result
+        if tool_name == "get_incident_duration":
+          state.memory['duration'] = tool_result
+        if tool_name == 'get_incident_timeline':
+          state.memory['timeline'] = tool_result
+
+        print("\n MEMORY", tool_name)
+        print("="*80)
+        print(state.memory)
+
         tool_result_dict = {
           "tool_name":tool_name,
           "result": tool_result
