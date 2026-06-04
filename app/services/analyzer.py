@@ -6,9 +6,9 @@ def analyze_incident(facts:InvestigationFacts)->IncidentAnalysis:
   if facts.escalation_count >2:
     severity="high"
   summary=(
-    f"Incident {facts.case_id}"
-    f"required {facts.escalation_count}",
-    f"and involved {facts.total_personnel}"
+    f"Incident {facts.case_id} "
+    f"required {facts.escalation_count} " 
+    f"and involved {facts.total_personnel} "
   )
   return IncidentAnalysis(
     severity=severity,

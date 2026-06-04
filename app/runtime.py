@@ -141,7 +141,10 @@ async def run_agent_execution_debug(query):
     "query": query,
     "final_response": state.final_response,
     "state": state,
-    "incident": incident,
-    "duration": duration,
-    "timeline": timeline
+    # "incident": incident,
+    # "duration": duration,
+    # "timeline": timeline
+    "incident": state.memory["incident"],
+    "duration": state.memory["duration"],
+    "timeline": state.memory["timeline"]
   }
