@@ -131,9 +131,6 @@ async def run_agent_execution_debug(query):
         "observation": tool_result
       })
     ### END OF LOOP
-    incident = get_tool_result(tool_results, "get_incident")
-    duration = get_tool_result(tool_results, "get_incident_duration")
-    timeline = get_tool_result(tool_results, "get_incident_timeline")
     state.current_iteration+=1
   
   return {
@@ -144,7 +141,7 @@ async def run_agent_execution_debug(query):
     # "incident": incident,
     # "duration": duration,
     # "timeline": timeline
-    "incident": state.memory["incident"],
-    "duration": state.memory["duration"],
-    "timeline": state.memory["timeline"]
+    "incident": state.memory.get("incident"),
+    "duration": state.memory.get("duration"),
+    "timeline": state.memory.get("timeline")
   }
