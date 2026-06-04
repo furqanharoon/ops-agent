@@ -32,8 +32,9 @@ for test_case in test_cases:
       analyzer = analyze_incident(facts)
       print("\n\n ANALYZER RESULTS", analyzer)
       if requires_human_approval(analyzer):
-        if not request_human_approval():
-          print("\n\n Human didn't approve report generation")
+        approved,reason = request_human_approval()
+        if not approved:
+          print(f"Request denied by Human. Reason given : {reason}")
           exit()
       report_output = generate_report(facts, analyzer)
       print("\n\n report_output", report_output)
