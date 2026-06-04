@@ -2,10 +2,11 @@ from app.schemas.investigation_facts import InvestigationFacts
 from datetime import datetime
 
 def build_investigation_facts(incident:dict,duration:dict,timeline:list):
-  if "error" in incident or "error" in duration:
+  if (incident is None or duration is None) or ("error" in incident or "error" in duration):
     return InvestigationFacts(
       error_message="Incident not found"
     )
+  
   final_resolver = ""
   total_personnel = []
   total_esclations = []
