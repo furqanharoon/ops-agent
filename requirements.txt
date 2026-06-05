@@ -4,3 +4,4 @@ pydantic
 anthropic
 sse-starlette
 uuid
+langgraph
