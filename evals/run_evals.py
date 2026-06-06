@@ -50,10 +50,6 @@ for test_case in test_cases:
     print("\n ALL PASSED \n", all_passed)
     if test_passed:
       passed_tests+=1
-  
-  # print("\nEXPECTED:")
-  # print(test_case["expected"])
-
 
   results.append(
     {
@@ -63,12 +59,6 @@ for test_case in test_cases:
       "response": response["final_response"]
     }
   )
-
-# print("\nSUMMARY")
-# print("=" * 80)
-
-# for result in results:
-#   print(result["name"])
 
 print("\n total_tests \n", total_tests)
 print("\n passed_tests \n", passed_tests)
