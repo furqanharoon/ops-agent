@@ -5,7 +5,6 @@ from anthropic import AsyncAnthropic
 from typing import Any
 
 anthropic_client = AsyncAnthropic()
-
 class PlannerDecision(BaseModel):
   action:str
   tool_name:str | None = None
@@ -62,13 +61,6 @@ TOOLS = [
 
 
 async def decide_tool(messages:list):
-  # system_prompt = f"""
-  #   You are a AI investigative agent.
-  #   You may call ONE tool at a time.
-  #   Before choosing another TOOL, review the observations already gathered. 
-  #   Do not CALL a tool if its result already exist in the observation.
-  #   If you have enough information to answer the user's question, do not CALL any further tool and provide the final.
-  # """
   system_prompt = f"""
     You are a AI investigative agent.
     You may call ONE tool per response.
@@ -81,7 +73,6 @@ async def decide_tool(messages:list):
   llm_response = await anthropic_client.messages.create(
     model="claude-sonnet-4-5",
     max_tokens=1000,
-    # system="You are a helpful AI assistant. You job is to ONLY use the tool at your disposal. Pleae make sure to not use anyother external or hallucinate anyother requirements. If you don't find anything using the GIVEN tools just reply 'I wasn't able to find anything using the provided tools'",
     system=system_prompt,
     tools=TOOLS,
     messages=messages
@@ -110,7 +101,6 @@ async def decide_tool(messages:list):
     single_tool = tool_uses[0]
     return PlannerDecision(
       action="tool",
-      # tool_uses=tool_uses,
       thought=thought,
       tool_uses=[single_tool],
       input_tokens=llm_response.usage.input_tokens,
