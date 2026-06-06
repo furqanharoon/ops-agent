@@ -48,8 +48,6 @@ async def run_agent_execution_debug(query):
     tool_results = []
     tool_names = []
     for tool_use in tool_response.tool_uses:
-      # tool_name = tool_response.tool_name
-      # tool_arguments = tool_response.tool_arguments
       tool_name = tool_use.name
       tool_names.append(tool_name)
       tool = tools_registry[tool_name]
@@ -138,9 +136,6 @@ async def run_agent_execution_debug(query):
     "query": query,
     "final_response": state.final_response,
     "state": state,
-    # "incident": incident,
-    # "duration": duration,
-    # "timeline": timeline
     "incident": state.memory.get("incident"),
     "duration": state.memory.get("duration"),
     "timeline": state.memory.get("timeline")
