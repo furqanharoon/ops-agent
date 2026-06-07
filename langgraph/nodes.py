@@ -2,6 +2,8 @@ from langgraph.state import WorkflowState
 from langgraph.types import interrupt
 from app.schemas.investigation_facts import InvestigationFacts
 from app.services.analyzer import analyze_incident
+from app.services.facts_extractor import build_investigation_facts
+from app.services.report_generator import generate_report
 
 def analysis_node(state: WorkflowState):
   print("\n Running Analysis Node \n")
@@ -10,26 +12,16 @@ def analysis_node(state: WorkflowState):
 
 def facts_node(state: WorkflowState):
   print("\n Running Facts Node \n")
-  state['facts'] = InvestigationFacts(
-    case_id="INC24493",
-    priority="Low",
-    reporter="John",
-    final_resolver="Sarah",
-    customer_satisfaction=1,
-    resolution_duration_hours=52.3,
-    total_personnel=7,
-    number_of_handoffs=9,
-    support_levels_involved=3,
-    escalation_count=3
-  )
+  state['facts'] = build_investigation_facts(state['incident'], state['duration'], state['timeline'])
   return state
 
 def report_node(state: WorkflowState):
   print("\n Running Reports Node \n")
-  state['report'] = f"""
-    Report generated from:
-    {state['analysis']}
-  """
+  # state['report'] = f"""
+  #   Report generated from:
+  #   {state['analysis']}
+  # """
+  state['report'] = generate_report(state['facts'], state['analysis'])
   return state
 
 def require_approval_node(state: WorkflowState):

@@ -8,3 +8,7 @@ class WorkflowState(TypedDict):
   report: str | None
   approval_status: str | None
   rejection_reason: str | None
+  incident: dict | None
+  duration: dict | None
+  timeline: list | None
+  
