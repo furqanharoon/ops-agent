@@ -13,7 +13,8 @@
       "final_resolver": "sarah",
       "customer_satisfaction": 1,
       "total_personnel": 7,
-      "number_of_handoffs": 9
+      "number_of_handoffs": 9,
+      "support_levels_involved": 3
     }
   },
   {
@@ -38,7 +39,53 @@
       "final_resolver": "sarah",
       "customer_satisfaction": 2,
       "number_of_handoffs": 3,
-      "total_personnel": 4
+      "total_personnel": 4,
+      "support_levels_involved": 2
+    }
+  },
+  {
+    "id":4,
+    "name": "simple_incident",
+    "query": "Investigate INC0818",
+    "expected_findings": [
+      "resolved"
+    ],
+    "expected":{
+      "final_resolver": "sarah",
+      "customer_satisfaction": 2,
+      "number_of_handoffs": 2,
+      "total_personnel": 4,
+      "support_levels_involved": 2
+    }
+  },
+  {
+    "id":5,
+    "name": "simple_incident",
+    "query": "Investigate INC0012",
+    "expected_findings": [
+      "resolved"
+    ],
+    "expected":{
+      "final_resolver": "sam",
+      "customer_satisfaction": 5,
+      "number_of_handoffs": 4,
+      "total_personnel": 4,
+      "support_levels_involved": 2
+    }
+  },
+  {
+    "id":6,
+    "name": "simple_incident",
+    "query": "Investigate INC0330",
+    "expected_findings": [
+      "resolved"
+    ],
+    "expected":{
+      "final_resolver": "emma",
+      "customer_satisfaction": 5,
+      "number_of_handoffs": 2,
+      "total_personnel": 3,
+      "support_levels_involved": 2
     }
   }
 ]
