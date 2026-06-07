@@ -72,6 +72,7 @@ async def decide_tool(messages:list):
   """
   llm_response = await anthropic_client.messages.create(
     model="claude-sonnet-4-5",
+    cache_control={"type": "ephemeral"},
     max_tokens=1000,
     system=system_prompt,
     tools=TOOLS,
