@@ -1,9 +1,11 @@
 from langgraph.graph import StateGraph,START,END
-
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.state import WorkflowState
-from langgraph.nodes import analysis_node, report_node, approval_node, route_after_analysis, facts_node
+from langgraph.nodes import analysis_node, report_node, require_approval_node, route_after_analysis, facts_node, route_after_required_approval, manual_review_node
 
 graph_builder = StateGraph(WorkflowState) # Creates an empty graph
+
+checkpointer = MemorySaver()
 
 graph_builder.add_node(
   "facts",
@@ -19,19 +21,21 @@ graph_builder.add_node(
   report_node
 )
 graph_builder.add_node(
-  "approval",
-  approval_node
+  "required_approval",
+  require_approval_node
 )
+
+graph_builder.add_node(
+  "manual_review",
+  manual_review_node
+)
+
 
 graph_builder.add_edge(
   START,
   "facts"
 ) # This adds and Edge that says START and goto analysis node
 
-# graph_builder.add_edge(
-#   "analysis",
-#   "report"
-# )
 graph_builder.add_edge(
   "facts",
   "analysis"
@@ -41,9 +45,14 @@ graph_builder.add_conditional_edges(
   route_after_analysis
 )
 
+graph_builder.add_conditional_edges(
+  "required_approval",
+  route_after_required_approval
+)
+
 graph_builder.add_edge(
-  "approval",
-  "report"
+  "manual_review",
+  END
 )
 
 graph_builder.add_edge(
@@ -51,4 +60,4 @@ graph_builder.add_edge(
   END
 ) # This add axnother Edge that says from Analysis node, goto END of Graph.
 
-graph = graph_builder.compile() # This run the whole graph and make it executable
+graph = graph_builder.compile(checkpointer=checkpointer) # This run the whole graph and make it executable

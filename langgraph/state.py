@@ -6,3 +6,5 @@ class WorkflowState(TypedDict):
   facts: InvestigationFacts | None
   analysis: IncidentAnalysis | None
   report: str | None
+  approval_status: str | None
+  rejection_reason: str | None
