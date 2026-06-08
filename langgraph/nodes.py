@@ -17,10 +17,6 @@ def facts_node(state: WorkflowState):
 
 def report_node(state: WorkflowState):
   print("\n Running Reports Node \n")
-  # state['report'] = f"""
-  #   Report generated from:
-  #   {state['analysis']}
-  # """
   state['report'] = generate_report(state['facts'], state['analysis'])
   return state
 
@@ -32,6 +28,7 @@ def require_approval_node(state: WorkflowState):
       "analysis": str(state['analysis'])
     }
   )
+  print("\n AFTER INTERRUPT\n")
   state['approval_status'] = approval_response['approval_status']
   if approval_response['approval_status'] =='rejected':
     state['rejection_reason'] = approval_response["rejection_reason"]
