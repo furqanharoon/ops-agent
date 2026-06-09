@@ -6,29 +6,24 @@ from app.services.facts_extractor import build_investigation_facts
 from app.services.report_generator import generate_report
 
 def analysis_node(state: WorkflowState):
-  print("\n Running Analysis Node \n")
   state['analysis'] = analyze_incident(state['facts'])
   return state
 
 def facts_node(state: WorkflowState):
-  print("\n Running Facts Node \n")
   state['facts'] = build_investigation_facts(state['incident'], state['duration'], state['timeline'])
   return state
 
 def report_node(state: WorkflowState):
-  print("\n Running Reports Node \n")
   state['report'] = generate_report(state['facts'], state['analysis'])
   return state
 
 def require_approval_node(state: WorkflowState):
-  print("\n Running Approval Node \n")
   approval_response = interrupt(
     {
       "message": "Human approval required",
       "analysis": str(state['analysis'])
     }
   )
-  print("\n AFTER INTERRUPT\n")
   state['approval_status'] = approval_response['approval_status']
   if approval_response['approval_status'] =='rejected':
     state['rejection_reason'] = approval_response["rejection_reason"]
