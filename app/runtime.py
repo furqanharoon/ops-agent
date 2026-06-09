@@ -2,7 +2,7 @@ import asyncio
 import time
 import uuid
 from pydantic import BaseModel,Field
-from app.tools.tools_registry import tools_registry
+from app.tools.tools_registry import tools_registry, ALLOWED_TOOLS
 from app.planner import decide_tool
 from app.logger import log_event
 from app.utils.fetch_tool_result import get_tool_result
@@ -49,6 +49,10 @@ async def run_agent_execution_debug(query):
     tool_names = []
     for tool_use in tool_response.tool_uses:
       tool_name = tool_use.name
+      if tool_name not in ALLOWED_TOOLS:
+        raise Exception(
+          f"Tool {tool_name} not allowed"
+        )
       tool_names.append(tool_name)
       tool = tools_registry[tool_name]
       tool_arguments = tool_use.input
