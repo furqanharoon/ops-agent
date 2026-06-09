@@ -5,3 +5,9 @@ tools_registry={
   "get_incident_duration": get_incident_duration,
   "get_incident_timeline": get_incident_timeline,
 }
+
+ALLOWED_TOOLS=[
+  "get_incident",
+  "get_incident_duration",
+  "get_incident_timeline"
+]
