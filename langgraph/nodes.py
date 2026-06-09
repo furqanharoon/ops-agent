@@ -41,5 +41,4 @@ def route_after_required_approval(state: WorkflowState):
   return "manual_review"
 
 def manual_review_node(state: WorkflowState):
-  print("\n Running Manual Review Node \n")
   return state
