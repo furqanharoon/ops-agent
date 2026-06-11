@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
-from app.runtime import (run_agent_execution, run_agent_execution_debug)
+from app.runtime import (run_agent_execution_debug)
 import asyncio
 import time
 
-from app.registry import tool_registry
 from app.planner import decide_tool
 from app.logger import log_event
 
@@ -29,8 +28,8 @@ async def run_agent(request: AgentRequest):
   return result
 
 # SSE ENDPOINT
-@app.get("/agent/stream")
-async def stream_agent(query: str):
-  return EventSourceResponse(
-    run_agent_execution(query)
-  )
+# @app.get("/agent/stream")
+# async def stream_agent(query: str):
+#   return EventSourceResponse(
+#     run_agent_execution(query)
+#   )
