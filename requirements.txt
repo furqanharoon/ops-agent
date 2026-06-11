@@ -3,5 +3,5 @@ uvicorn[standard]
 pydantic
 anthropic
 sse-starlette
-uuid
 langgraph
+psycopg2-binary
