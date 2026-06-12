@@ -39,7 +39,7 @@ for test_case in test_cases:
       report_output = generate_report(facts, analyzer)
       print("\n\n report_output", report_output)
     comparison = compare_facts(test_case.get("expected"), facts)
-    print("\n COMPARISON VALUESSS \n", comparison.values())
+    # print("\n COMPARISON VALUESSS \n", comparison.values())
     for result in comparison.values():
       if not result['passed']:
         all_passed = False
