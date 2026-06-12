@@ -14,9 +14,7 @@ class AgentRequest(BaseModel):
 
 @app.get("/health")
 async def health_check():
-  print("\nSTART\n")
   await asyncio.sleep(5)
-  print("THIS IS AFTER SLEEP\n")
   return {
     "status": "ok"
   }
