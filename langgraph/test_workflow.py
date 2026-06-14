@@ -3,6 +3,8 @@ from langgraph.types import Command
 import asyncio
 from app.runtime import run_agent_execution_debug
 
+from langgraph.checkpoint.postgres import PostgresSaver
+
 query="Investigate INC24493"
 response = asyncio.run(
   run_agent_execution_debug(query)
