@@ -2,10 +2,12 @@ from langgraph.graph import StateGraph,START,END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.state import WorkflowState
 from langgraph.nodes import analysis_node, report_node, require_approval_node, route_after_analysis, facts_node, route_after_required_approval, manual_review_node
+from langgraph.checkpoint.postgres import PostgresSaver
 
 graph_builder = StateGraph(WorkflowState) # Creates an empty graph
 
-checkpointer = MemorySaver()
+# checkpointer = MemorySaver()
+checkpointer = PostgresSaver()
 
 graph_builder.add_node(
   "facts",
