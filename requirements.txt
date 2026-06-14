@@ -5,3 +5,4 @@ anthropic
 sse-starlette
 langgraph
 psycopg2-binary
+langgraph-checkpoint-postgres
