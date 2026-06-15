@@ -3,6 +3,7 @@ from app.schemas.incident_analysis import IncidentAnalysis
 from app.schemas.investigation_facts import InvestigationFacts
 
 class WorkflowState(TypedDict):
+  thread_id: str | None
   facts: InvestigationFacts | None
   analysis: IncidentAnalysis | None
   report: str | None
