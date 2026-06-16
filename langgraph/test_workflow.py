@@ -4,6 +4,7 @@ import asyncio
 import uuid
 from app.runtime import run_agent_execution_debug
 from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.workflow_runs import create_workflow_run
 
 
 DB_URI = "postgresql://postgres@localhost/incident_management"
@@ -14,6 +15,8 @@ response = asyncio.run(
 )
 
 thread_id = str(uuid.uuid4())
+create_workflow_run(thread_id)
+print(f"Thread ID: {thread_id}")
 
 with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
   graph = get_graph(checkpointer)
@@ -21,6 +24,7 @@ with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
 
   result = graph.invoke(
     {
+      "thread_id": thread_id,
       "incident": response['incident'],
       "duration": response['duration'],
       "timeline": response['timeline'],
@@ -32,7 +36,7 @@ with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     },
     config={
       "configurable": {
-        "thread_id": "workflow-1"
+        "thread_id": thread_id
       }
     }
   )
