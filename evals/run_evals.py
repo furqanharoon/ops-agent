@@ -1,13 +1,12 @@
 import json
 import asyncio
-from app.runtime import run_agent_execution_debug
-from app.services.facts_extractor import build_investigation_facts
-from app.services.analyzer import analyze_incident
-from app.services.report_generator import generate_report
-from app.services.human_review import request_human_approval
-from app.services.approval import requires_human_approval
+from agent.runtime import run_agent_execution_debug
+from agent.services.facts_extractor import build_investigation_facts
+from agent.services.analyzer import analyze_incident
+from agent.services.report_generator import generate_report
+from agent.services.human_review import request_human_approval
+from agent.services.approval import requires_human_approval
 from evals.scoring import compare_facts
-
 
 results = []
 with open("evals/investigations.json") as f:
