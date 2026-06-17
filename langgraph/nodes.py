@@ -1,9 +1,9 @@
 from langgraph.state import WorkflowState
 from langgraph.types import interrupt
-from app.schemas.investigation_facts import InvestigationFacts
-from app.services.analyzer import analyze_incident
-from app.services.facts_extractor import build_investigation_facts
-from app.services.report_generator import generate_report
+from agent.schemas.investigation_facts import InvestigationFacts
+from agent.services.analyzer import analyze_incident
+from agent.services.facts_extractor import build_investigation_facts
+from agent.services.report_generator import generate_report
 
 def analysis_node(state: WorkflowState):
   state['analysis'] = analyze_incident(state['facts'])

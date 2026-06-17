@@ -1,6 +1,6 @@
 from typing import TypedDict
-from app.schemas.incident_analysis import IncidentAnalysis
-from app.schemas.investigation_facts import InvestigationFacts
+from agent.schemas.incident_analysis import IncidentAnalysis
+from agent.schemas.investigation_facts import InvestigationFacts
 
 class WorkflowState(TypedDict):
   thread_id: str | None

@@ -1,6 +1,4 @@
-# from connection import get_connection
-
-from app.connection import get_connection
+from database.connection import get_connection
 import uuid
 
 def create_workflow_run(thread_id):
