@@ -2,10 +2,10 @@ import asyncio
 import time
 import uuid
 from pydantic import BaseModel,Field
-from app.tools.tools_registry import tools_registry, ALLOWED_TOOLS
-from app.planner import decide_tool
-from app.logger import log_event
-from app.utils.fetch_tool_result import get_tool_result
+from agent.tools.tools_registry import tools_registry, ALLOWED_TOOLS
+from agent.planner import decide_tool
+from agent.logger import log_event
+from agent.utils.fetch_tool_result import get_tool_result
 
 MAX_ITERATIONS = 5
 class AgentState(BaseModel):

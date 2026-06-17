@@ -1,5 +1,5 @@
-from app.schemas.investigation_facts import InvestigationFacts
-from app.schemas.incident_analysis import IncidentAnalysis
+from agent.schemas.investigation_facts import InvestigationFacts
+from agent.schemas.incident_analysis import IncidentAnalysis
 
 def generate_report(facts: InvestigationFacts, analysis:IncidentAnalysis) -> str:
   return f"""

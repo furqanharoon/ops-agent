@@ -1,4 +1,4 @@
-from app.db import get_connection
+from database.connection import get_connection
 
 async def get_incident(case_id: str):
   conn = get_connection()

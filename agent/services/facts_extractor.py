@@ -1,4 +1,4 @@
-from app.schemas.investigation_facts import InvestigationFacts
+from agent.schemas.investigation_facts import InvestigationFacts
 from datetime import datetime
 
 def build_investigation_facts(incident:dict,duration:dict,timeline:list):
