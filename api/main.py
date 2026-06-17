@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 # from sse_starlette.sse import EventSourceResponse
-from api.routes import health, workflow, agent
+from api.routes import health, agent, workflows
 import asyncio
 import time
 
@@ -38,4 +38,4 @@ app = FastAPI()
 
 app.include_router(health.router)
 app.include_router(agent.router)
-app.include_router(workflow.router)
+app.include_router(workflows.router)
