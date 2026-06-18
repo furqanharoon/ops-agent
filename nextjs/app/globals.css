@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 22% 9%;
+  --foreground: 210 24% 92%;
+  --card: 220 20% 13%;
+  --card-foreground: 210 24% 92%;
+  --primary: 199 78% 49%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 218 17% 18%;
+  --muted-foreground: 214 14% 66%;
+  --accent: 218 18% 20%;
+  --accent-foreground: 210 24% 94%;
+  --destructive: 2 70% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 217 16% 24%;
+  --input: 217 16% 28%;
+  --ring: 199 78% 49%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background:
+    linear-gradient(180deg, hsl(220 24% 11%) 0%, hsl(var(--background)) 28rem),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.28);
+}
