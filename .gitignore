@@ -219,3 +219,10 @@ __marimo__/
 
 .DS_Store
 *.pyc
+
+# Next.js frontend
+nextjs/.next/
+nextjs/node_modules/
+nextjs/out/
+nextjs/.env.local
+nextjs/tsconfig.tsbuildinfo
