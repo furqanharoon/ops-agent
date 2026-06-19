@@ -1,5 +1,4 @@
 from database.connection import get_connection
-import uuid
 
 def create_workflow_run(thread_id):
   conn = get_connection()
@@ -19,5 +18,21 @@ def create_workflow_run(thread_id):
   cursor.close()
   conn.close()
 
-# thread_id=str(uuid.uuid4())
-# create_workflow_run(thread_id)
+def update_workflow_status(thread_id, status):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  cursor.execute(
+    """
+    UPDATE workflow_runs
+    SET status = %s,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE thread_id = %s
+    """,
+    (status, thread_id)
+  )
+
+  conn.commit()
+
+  cursor.close()
+  conn.close()

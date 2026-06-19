@@ -1,10 +1,10 @@
 import asyncio
 import uuid
-from langgraph.workflow import get_graph
+from orchestration.workflow import get_graph
 from langgraph.types import Command
 from agent.runtime import run_agent_execution_debug
 from langgraph.checkpoint.postgres import PostgresSaver
-from langgraph.workflow_runs import create_workflow_run
+from orchestration.repositories.workflow_repository import create_workflow_run, update_workflow_status
 
 DB_URI = "postgresql://postgres@localhost/incident_management"
 
@@ -56,6 +56,7 @@ async def resume_workflow(
   }
   if rejection_reason:
     resume_payload["rejection_reason"] = rejection_reason
+  update_workflow_status(thread_id, approval_status)
   with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     graph = get_graph(checkpointer)
     resume_result = graph.invoke(

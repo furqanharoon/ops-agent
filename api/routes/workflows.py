@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from langgraph.services.workflow_service import start_workflow, resume_workflow
+from orchestration.services.workflow_service import start_workflow, resume_workflow
 from api.schemas.agent import AgentRequest
 from api.schemas.workflow import ResumeWorkflowRequest, WorkflowResponse, StartWorkflowRequest
 router = APIRouter()

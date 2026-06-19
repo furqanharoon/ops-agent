@@ -1,4 +1,4 @@
-from langgraph.state import WorkflowState
+from orchestration.state import WorkflowState
 from langgraph.types import interrupt
 from agent.schemas.investigation_facts import InvestigationFacts
 from agent.services.analyzer import analyze_incident
