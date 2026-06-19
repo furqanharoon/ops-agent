@@ -79,9 +79,10 @@ export interface WorkflowState {
 
 export interface Workflow {
   thread_id: string;
-  workflow_id?: string;
+  workflow_id?: string | number;
   status: WorkflowStatus;
   started_at?: string | null;
+  updated_at?: string | null;
   state?: WorkflowState | null;
   interrupt?: Interrupt[] | null;
 }

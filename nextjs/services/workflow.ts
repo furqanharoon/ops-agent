@@ -26,11 +26,19 @@ function toWorkflow(value: unknown): Workflow | null {
 
   const state = toWorkflowState(value.state);
   const status = deriveWorkflowStatus(state, typeof value.status === "string" ? value.status : null);
+  const workflowId = typeof value.workflow_id === "string" || typeof value.workflow_id === "number" ? value.workflow_id : value.id;
+  const startedAt =
+    typeof value.started_at === "string"
+      ? value.started_at
+      : typeof value.created_at === "string"
+        ? value.created_at
+        : null;
 
   return {
     thread_id: threadId,
-    workflow_id: typeof value.workflow_id === "string" ? value.workflow_id : undefined,
-    started_at: typeof value.started_at === "string" ? value.started_at : null,
+    workflow_id: typeof workflowId === "string" || typeof workflowId === "number" ? workflowId : undefined,
+    started_at: startedAt,
+    updated_at: typeof value.updated_at === "string" ? value.updated_at : null,
     status,
     state,
     interrupt: state.__interrupt__ ?? null

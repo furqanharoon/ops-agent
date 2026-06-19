@@ -36,3 +36,52 @@ def update_workflow_status(thread_id, status):
 
   cursor.close()
   conn.close()
+
+def get_all_workflows():
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  cursor.execute(
+    """
+    SELECT id,thread_id,status,created_at,updated_at
+    FROM workflow_runs
+    ORDER BY created_at DESC;
+    """
+  )
+
+  rows = cursor.fetchall()
+
+  workflows = []
+
+  for row in rows:
+    workflows.append({
+      "id": row[0],
+      "thread_id": row[1],
+      "status": row[2],
+      "created_at": row[3],
+      "updated_at": row[4]
+    })
+
+  cursor.close()
+  conn.close()
+
+  return workflows
+
+def update_workflow_status(thread_id, status):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  cursor.execute(
+    """
+    UPDATE workflow_runs
+    SET status = %s,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE thread_id = %s
+    """,
+    (status, thread_id)
+  )
+
+  conn.commit()
+
+  cursor.close()
+  conn.close()

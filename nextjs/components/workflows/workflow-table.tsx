@@ -46,6 +46,7 @@ export function WorkflowTable({
             <th className="px-4 py-3 font-medium">Thread ID</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Started At</th>
+            <th className="px-4 py-3 font-medium">Updated At</th>
             <th className="px-4 py-3 font-medium">Actions</th>
           </tr>
         </thead>
@@ -63,6 +64,9 @@ export function WorkflowTable({
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {workflow.started_at ? new Date(workflow.started_at).toLocaleString() : "Not available"}
+              </td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {workflow.updated_at ? new Date(workflow.updated_at).toLocaleString() : "Not available"}
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
