@@ -4,7 +4,7 @@ from orchestration.workflow import get_graph
 from langgraph.types import Command
 from agent.runtime import run_agent_execution_debug
 from langgraph.checkpoint.postgres import PostgresSaver
-from orchestration.repositories.workflow_repository import create_workflow_run, update_workflow_status, get_all_workflows
+from orchestration.repositories.workflow_repository import create_workflow_run, update_workflow_status, get_all_workflows, get_workflow
 
 DB_URI = "postgresql://postgres@localhost/incident_management"
 
@@ -75,8 +75,14 @@ async def resume_workflow(
     "state": resume_result
   }
 
-async def list_all_workflows():
+async def list_workflows():
   workflows = get_all_workflows()
+  return {
+    "workflows": workflows
+  }
+
+async def get_workflow(thread_id):
+  workflows = get_workflow()
   return {
     "workflows": workflows
   }
