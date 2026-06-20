@@ -85,3 +85,18 @@ def update_workflow_status(thread_id, status):
 
   cursor.close()
   conn.close()
+
+def get_workflow(thread_id):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  cursor.execute(
+    """
+    SELECT id,thread_id,status,created_at,updated_at FROM workflow_runs
+    WHERE thread_id = %s
+    """,
+    (thread_id)
+  )
+
+  cursor.close()
+  conn.close()
