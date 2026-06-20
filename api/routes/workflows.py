@@ -17,7 +17,7 @@ async def get_workflow(thread_id: str):
   return ""
 
 @router.get("/workflows")
-async def list_workflows():
+async def list_all_workflows_1():
   return await list_workflows()
 
 @router.delete("/workflows/{thread_id}")
