@@ -226,3 +226,6 @@ nextjs/node_modules/
 nextjs/out/
 nextjs/.env.local
 nextjs/tsconfig.tsbuildinfo
+
+# VSCode
+.vscode/
