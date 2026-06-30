@@ -2,7 +2,7 @@
 
 `ops-agent` is an AI engineering project for incident investigation workflows.
 
-The project started as a ReAct-style agent that could retrieve incident data through tools. It has since evolved into a workflow-oriented system that combines agentic tool use, LangGraph orchestration, human approval gates, checkpointing, interrupt and resume behavior, custom evaluations, and structured observability.
+The project started as a ReAct-style agent that could retrieve incident data through tools. It has since evolved into a workflow-oriented system that combines agentic tool use, LangGraph orchestration, human approval gates, PostgreSQL checkpointing, interrupt and resume behavior, a FastAPI service layer, custom evaluations, and structured observability.
 
 The system is structured around production-oriented design patterns without claiming to be a fully deployed operations platform. Its focus is agent state management, durable workflow design, human-in-the-loop routing, evaluation harnesses, and observable tool execution.
 
@@ -69,7 +69,7 @@ Implemented LangGraph concepts:
 | Edges | Define normal flow from facts to analysis to output. |
 | Conditional routing | Routes high-severity incidents to human approval. |
 | Fan-out / fan-in concepts | Represented at the architecture level through staged data gathering and consolidation into investigation facts. |
-| Checkpointing | Uses LangGraph `MemorySaver` for workflow state persistence during a run. |
+| Checkpointing | Uses LangGraph `PostgresSaver` for durable workflow state persistence across processes. |
 | Interrupts | Pauses execution when human approval is required. |
 | Resume | Continues the workflow after an approval or rejection decision is supplied. |
 | Human-in-the-loop | High-severity incidents require an explicit approval decision before report generation. |
@@ -139,11 +139,11 @@ Workflow reaches approval node
   |
 interrupt() returns an approval request
   |
-LangGraph checkpoints workflow state
+LangGraph checkpoints workflow state to PostgreSQL
   |
 Caller keeps the same thread_id
   |
-Human submits approval decision
+Human submits approval decision via POST /workflows/resume
   |
 Workflow resumes from checkpoint
   |
@@ -156,7 +156,7 @@ The approval node calls `interrupt()` with a payload containing a message and th
 
 Checkpointing
 
-The workflow is compiled with a LangGraph checkpointer. The current implementation uses `MemorySaver`, which preserves workflow state between interrupt and resume calls within the same process.
+The workflow is compiled with a LangGraph `PostgresSaver` checkpointer. This persists workflow state to PostgreSQL between interrupt and resume calls, meaning workflows survive process restarts and can be resumed from any environment.
 
 `thread_id`
 
@@ -170,7 +170,9 @@ Example:
 
 ```python
 from langgraph.types import Command
-from langgraph.workflow import graph
+from orchestration.workflow import get_graph
+
+graph = get_graph(checkpointer)
 
 resume_result = graph.invoke(
     Command(
@@ -184,6 +186,35 @@ resume_result = graph.invoke(
         }
     }
 )
+```
+
+## REST API
+
+The project exposes a FastAPI service layer for triggering and managing workflows over HTTP.
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/health` | GET | Health check. |
+| `/agent/run` | POST | Run a one-off agent execution against a query. |
+| `/workflows/start` | POST | Start a new incident investigation workflow for a given `case_id`. |
+| `/workflows/resume` | POST | Resume an interrupted workflow with an approval decision. |
+| `/workflows/{thread_id}` | GET | Get the status of a single workflow run. |
+| `/workflows` | GET | List all workflow runs. |
+
+### Start a workflow
+
+```bash
+curl -X POST http://localhost:8000/workflows/start \
+  -H "Content-Type: application/json" \
+  -d '{"case_id": "INC24493"}'
+```
+
+### Resume a workflow
+
+```bash
+curl -X POST http://localhost:8000/workflows/resume \
+  -H "Content-Type: application/json" \
+  -d '{"thread_id": "workflow-1", "approval_status": "approved"}'
 ```
 
 ## Observability
@@ -302,23 +333,23 @@ More detailed execution path:
 ```text
 User Query
   |
-app.runtime.AgentState
+agent.runtime.AgentState
   |
-app.planner.decide_tool()
+agent.planner.decide_tool()
   |
 Anthropic tool-calling response
   |
-app.tools.tools_registry
+agent.tools.tools_registry
   |
 PostgreSQL incident data
   |
 Agent observations and memory
   |
-app.services.facts_extractor
+agent.services.facts_extractor
   |
-app.services.analyzer
+agent.services.analyzer
   |
-langgraph.workflow.StateGraph
+orchestration.workflow.StateGraph
   |
 Approval interrupt or report generation
 ```
@@ -327,14 +358,18 @@ Core modules:
 
 | Module | Responsibility |
 | --- | --- |
-| `app/runtime.py` | Agent execution loop, agent state, tool execution, memory, and observability counters. |
-| `app/planner.py` | LLM planner, tool schema definitions, and tool/final-response decision parsing. |
-| `app/tools/incident_tools.py` | Incident data retrieval tools backed by PostgreSQL. |
-| `app/services/facts_extractor.py` | Converts raw incident data into structured investigation facts. |
-| `app/services/analyzer.py` | Classifies incident severity and builds analysis summary. |
-| `app/services/report_generator.py` | Creates final investigation report text. |
-| `langgraph/workflow.py` | LangGraph workflow definition, edges, routing, and checkpointer setup. |
-| `langgraph/nodes.py` | Workflow node implementations and routing functions. |
+| `agent/runtime.py` | Agent execution loop, agent state, tool execution, memory, and observability counters. |
+| `agent/planner.py` | LLM planner, tool schema definitions, and tool/final-response decision parsing. |
+| `agent/tools/incident_tools.py` | Incident data retrieval tools backed by PostgreSQL. |
+| `agent/services/facts_extractor.py` | Converts raw incident data into structured investigation facts. |
+| `agent/services/analyzer.py` | Classifies incident severity and builds analysis summary. |
+| `agent/services/report_generator.py` | Creates final investigation report text. |
+| `orchestration/workflow.py` | LangGraph workflow definition, edges, routing, and checkpointer setup. |
+| `orchestration/nodes.py` | Workflow node implementations and routing functions. |
+| `orchestration/repositories/workflow_repository.py` | Database access for workflow run persistence. |
+| `orchestration/services/workflow_service.py` | Coordinates agent execution, graph invocation, and workflow run tracking. |
+| `api/main.py` | FastAPI application and router registration. |
+| `api/routes/workflows.py` | Workflow start, resume, list, and status endpoints. |
 | `evals/run_evals.py` | Evaluation runner for regression testing. |
 | `evals/scoring.py` | Field-level expected-versus-actual scoring. |
 
@@ -350,6 +385,8 @@ The facts extractor converts raw tool output into typed data. This gives the wor
 
 The LangGraph workflow handles state transitions, approval gates, and resume behavior. These are control-flow concerns, so they are better represented as a graph than hidden inside a long prompt.
 
+The FastAPI layer exposes the workflow over HTTP without coupling it to any particular client. The service layer coordinates agent execution and graph invocation, keeping the route handlers thin.
+
 The evaluation harness stays outside the workflow. This keeps tests independent from the implementation path and makes it easier to catch regressions in the behavior users actually experience.
 
 ## Engineering Concepts Demonstrated
@@ -364,9 +401,11 @@ This project highlights AI engineering patterns that are relevant beyond a narro
 | LangGraph | Workflow modeled as a `StateGraph` with nodes, edges, and conditional routing. |
 | Human-in-the-loop systems | High-severity incidents pause for approval before report generation. |
 | Durable workflows | Checkpoint and resume semantics are built into the workflow design. |
-| Checkpointing | `MemorySaver` persists workflow state during interrupt/resume execution. |
+| Checkpointing | `PostgresSaver` persists workflow state to PostgreSQL across interrupt/resume calls. |
 | Interrupt/Resume | Approval node pauses with `interrupt()` and resumes with `Command(resume=...)`. |
 | Workflow routing | Severity and approval status determine graph transitions. |
+| Workflow run persistence | Workflow runs are tracked in a PostgreSQL `workflow_runs` table with status and timestamps. |
+| REST API | FastAPI service layer exposes workflow lifecycle over HTTP. |
 | Structured observability | JSON event logs, trace IDs, tool timing, failures, token usage, and LLM call counts. |
 | Custom evaluations | JSON cases and scoring logic validate extracted investigation facts. |
 | Failure handling | Tool failures are logged and stored in state as failed observations. |
@@ -391,17 +430,19 @@ Completed:
 - Structured observability
 - Custom evals
 - LangGraph workflow
-- Checkpointing with in-memory persistence
 - Interrupts
 - Resume flow
 - Human approvals
+- PostgreSQL checkpoint persistence
+- Workflow runs database
+- FastAPI service layer (health, agent, workflow endpoints)
+
+In progress:
+
+- Next.js operator dashboard
 
 Planned:
 
-- PostgreSQL checkpoint persistence
-- Workflow runs database
-- FastAPI service layer hardening
-- Next.js dashboard
 - Workflow visualization
 - Authentication
 - Docker deployment
@@ -418,8 +459,16 @@ pip install -r requirements.txt
 The project expects:
 
 - A local PostgreSQL database named `incident_management`
-- Incident and event tables compatible with `app/tools/incident_tools.py`
+- Incident and event tables compatible with `agent/tools/incident_tools.py`
 - An Anthropic API key available in the environment for the planner model
+- LangGraph checkpoint tables initialized (run `database/scripts/setup_postgres_checkpointer.py` once)
+- Workflow runs table initialized (run `database/scripts/create_workflow_runs_table.py` once)
+
+Start the API server:
+
+```bash
+uvicorn api.main:app --reload
+```
 
 Run the evaluation harness:
 
@@ -427,17 +476,16 @@ Run the evaluation harness:
 python evals/run_evals.py
 ```
 
-Run the LangGraph workflow example:
+Run the LangGraph workflow example directly:
 
 ```bash
-python langgraph/test_workflow.py
+python orchestration/test_workflow.py
 ```
 
 ## Repository Structure
 
 ```text
-app/
-  main.py                  FastAPI entrypoints in progress
+agent/
   runtime.py               ReAct agent loop and state
   planner.py               LLM planner and tool schemas
   logger.py                JSON event logging
@@ -447,26 +495,41 @@ app/
   tools/                   Incident retrieval tools and registry
   utils/                   Runtime helper utilities
 
-langgraph/
-  workflow.py              StateGraph definition and checkpointer
-  nodes.py                 Workflow nodes and route functions
+orchestration/
+  workflow.py              StateGraph definition and PostgreSQL checkpointer
+  nodes.py                 Workflow nodes and routing functions
   state.py                 Workflow state type
   test_workflow.py         Interrupt/resume workflow example
+  resume_workflow.py       Resume flow standalone example
+  repositories/            Database access for workflow run persistence
+  services/                Workflow coordination and run tracking
+
+api/
+  main.py                  FastAPI application and router registration
+  routes/                  health, agent, and workflow endpoints
+  schemas/                 Request and response Pydantic models
+
+database/
+  connection.py            PostgreSQL connection helper
+  scripts/                 Table creation and checkpointer setup scripts
 
 evals/
   investigations.json      Evaluation cases
   run_evals.py             Evaluation runner
   scoring.py               Expected versus actual comparison
+
+nextjs/                    Operator dashboard (in progress)
 ```
 
 ## Design Status
 
-The current implementation covers the core architecture and control flow. Some infrastructure choices are still intentionally scoped:
+The current implementation covers the core architecture, control flow, and service layer. Infrastructure choices reflect the current stage of the project:
 
-- Checkpointing currently uses in-memory persistence.
+- Checkpointing uses PostgreSQL persistence via `PostgresSaver`, surviving process restarts.
+- Workflow runs are tracked in a `workflow_runs` table with status and timestamps.
 - Logs are emitted to stdout as structured JSON.
 - The evaluation harness is custom and lightweight.
-- Approval handling currently runs through workflow state rather than a full user interface.
-- The FastAPI surface exists, but the service layer and dashboard are still future work.
+- The FastAPI layer is functional for workflow start, resume, and status queries.
+- The Next.js operator dashboard is started but not yet feature complete.
 
-These constraints keep the system inspectable while leaving a clear path toward persistent workflow state, richer observability, authenticated APIs, and an operator dashboard.
+These choices leave a clear path toward richer observability, authenticated APIs, workflow visualization, and a full operator dashboard.
