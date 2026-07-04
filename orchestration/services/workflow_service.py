@@ -82,7 +82,25 @@ async def list_workflows():
   }
 
 async def get_workflow_details(thread_id):
-  workflows = get_workflow(thread_id)
+  row = get_workflow(thread_id)
+
+  if not row:
+    return None
+
+  id_, thread_id_db, status, created_at, updated_at = row
+
+  state = None
+  with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
+    graph = get_graph(checkpointer)
+    snapshot = graph.get_state({"configurable": {"thread_id": thread_id}})
+    if snapshot:
+      state = snapshot.values
+
   return {
-    "workflows": workflows
+    "id": id_,
+    "thread_id": thread_id_db,
+    "status": status,
+    "created_at": created_at.isoformat() if created_at else None,
+    "updated_at": updated_at.isoformat() if updated_at else None,
+    "state": state
   }
