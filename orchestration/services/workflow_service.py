@@ -81,8 +81,8 @@ async def list_workflows():
     "workflows": workflows
   }
 
-async def get_workflow(thread_id):
-  workflows = get_workflow()
+async def get_workflow_details(thread_id):
+  workflows = get_workflow(thread_id)
   return {
     "workflows": workflows
   }

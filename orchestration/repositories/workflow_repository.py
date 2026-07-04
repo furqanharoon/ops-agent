@@ -95,8 +95,10 @@ def get_workflow(thread_id):
     SELECT id,thread_id,status,created_at,updated_at FROM workflow_runs
     WHERE thread_id = %s
     """,
-    (thread_id)
+    (thread_id,)
   )
+  workflow = cursor.fetchone()
 
   cursor.close()
   conn.close()
+  return workflow
