@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from orchestration.workflow import get_graph
 from langgraph.types import Command
+from langgraph.errors import GraphInterrupt
 from agent.runtime import run_agent_execution_debug
 from langgraph.checkpoint.postgres import PostgresSaver
 from orchestration.repositories.workflow_repository import create_workflow_run, update_workflow_status, get_all_workflows, get_workflow
@@ -21,25 +22,28 @@ async def start_workflow(case_id: str):
   with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     graph = get_graph(checkpointer)
 
-    result = graph.invoke(
-      {
-        "thread_id": thread_id,
-        "incident": response['incident'],
-        "duration": response['duration'],
-        "timeline": response['timeline'],
-        "facts": None,
-        "analysis": None,
-        "report": None,
-        "approval_status": None,
-        "rejection_status": None
-      },
-      config={
-        "configurable": {
-          "thread_id": thread_id
+    try:
+      result = graph.invoke(
+        {
+          "thread_id": thread_id,
+          "incident": response['incident'],
+          "duration": response['duration'],
+          "timeline": response['timeline'],
+          "facts": None,
+          "analysis": None,
+          "report": None,
+          "approval_status": None,
+          "rejection_status": None
+        },
+        config={
+          "configurable": {
+            "thread_id": thread_id
+          }
         }
-      }
-    )
-    print(result)
+      )
+    except GraphInterrupt:
+      snapshot = graph.get_state({"configurable": {"thread_id": thread_id}})
+      result = snapshot.values
 
   return {
     "thread_id": thread_id,
@@ -93,8 +97,17 @@ async def get_workflow_details(thread_id):
   with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     graph = get_graph(checkpointer)
     snapshot = graph.get_state({"configurable": {"thread_id": thread_id}})
+    print("Snapshottttt", snapshot)
     if snapshot:
+      interrupts = []
       state = snapshot.values
+      for task in snapshot.tasks:
+        for interrupt in task.interrupts:
+          interrupts.append({
+            "value": interrupt.value,
+            "id": interrupt.id
+          })
+      state["__interrupt__"]=interrupts
 
   return {
     "id": id_,
