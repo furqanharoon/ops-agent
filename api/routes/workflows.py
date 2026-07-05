@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from orchestration.services.workflow_service import start_workflow, resume_workflow, list_workflows, get_workflow_details
+from orchestration.services.workflow_service import start_workflow, resume_workflow, list_workflows, get_workflow_details, delete_workflow_run
 from api.schemas.agent import AgentRequest
 from api.schemas.workflow import ResumeWorkflowRequest, WorkflowResponse, StartWorkflowRequest
 router = APIRouter()
@@ -22,4 +22,4 @@ async def list_all_workflows_1():
 
 @router.delete("/workflows/{thread_id}")
 async def delete_workflow(thread_id: str):
-  return ""
+  return await delete_workflow_run(thread_id)

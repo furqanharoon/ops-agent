@@ -86,6 +86,22 @@ def update_workflow_status(thread_id, status):
   cursor.close()
   conn.close()
 
+def delete_workflow(thread_id):
+  conn = get_connection()
+  cursor = conn.cursor()
+
+  cursor.execute(
+    """
+    DELETE FROM workflow_runs
+    WHERE thread_id = %s
+    """,
+    (thread_id,)
+  )
+
+  conn.commit()
+  cursor.close()
+  conn.close()
+
 def get_workflow(thread_id):
   conn = get_connection()
   cursor = conn.cursor()
