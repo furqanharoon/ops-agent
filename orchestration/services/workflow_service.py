@@ -97,7 +97,6 @@ async def get_workflow_details(thread_id):
   with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     graph = get_graph(checkpointer)
     snapshot = graph.get_state({"configurable": {"thread_id": thread_id}})
-    print("Snapshottttt", snapshot)
     if snapshot:
       interrupts = []
       state = snapshot.values
