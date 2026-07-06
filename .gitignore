@@ -229,3 +229,5 @@ nextjs/tsconfig.tsbuildinfo
 
 # VSCode
 .vscode/
+memory/
+PITCH.md
