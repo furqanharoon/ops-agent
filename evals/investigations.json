@@ -87,5 +87,22 @@
       "total_personnel": 3,
       "support_levels_involved": 2
     }
+  },
+  {
+    "id": 7,
+    "name": "high_priority_incident",
+    "query": "Investigate INC30713",
+    "expected_findings":[
+      "level 3 support",
+      "multiple escalations",
+      "customer not satisfied"
+    ],
+    "expected": {
+      "final_resolver": "michael",
+      "customer_satisfaction": 1,
+      "number_of_handoffs": 9,
+      "total_personnel": 8,
+      "support_levels_involved": 3
+    }
   }
 ]
