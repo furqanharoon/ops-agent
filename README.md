@@ -199,7 +199,10 @@ The project exposes a FastAPI service layer for triggering and managing workflow
 | `/workflows/start` | POST | Start a new incident investigation workflow for a given `case_id`. |
 | `/workflows/resume` | POST | Resume an interrupted workflow with an approval decision. |
 | `/workflows/{thread_id}` | GET | Get the status of a single workflow run. |
+| `/workflows/{thread_id}` | DELETE | Delete a workflow run. |
 | `/workflows` | GET | List all workflow runs. |
+| `/evals/run` | POST | Start an eval run as a background job. Returns `{ job_id }` immediately. |
+| `/evals/result/{job_id}` | GET | Poll for eval job status and results (`running` / `done` / `error`). |
 
 ### Start a workflow
 
@@ -289,20 +292,30 @@ Implemented evaluation features:
 The evaluations are intentionally separate from the workflow system.
 
 ```text
-Evaluation Runner
+POST /evals/run (returns job_id immediately)
   |
-Runs agent execution
+Background task starts
+  |
+Runs agent execution per test case
   |
 Builds investigation facts
   |
 Compares facts to expected JSON
   |
-Reports pass/fail results
+Stores results in job store
+
+GET /evals/result/{job_id} (polled every 3s by frontend)
+  |
+Returns status: running | done | error
+  |
+Frontend renders summary and per-field comparison table
 ```
 
 The workflow is the system under test. The eval runner is the testing harness.
 
 This separation matters because the evaluation system should not become part of the product path. It should exercise the product path from the outside, collect outputs, and score them against expected behavior.
+
+Evals run as a background task because each test case requires several LLM API calls. Running 7 cases synchronously would exceed standard HTTP proxy timeouts. The background task pattern returns a job ID immediately and lets the frontend poll for completion.
 
 ## Technical Architecture
 
@@ -369,7 +382,8 @@ Core modules:
 | `orchestration/repositories/workflow_repository.py` | Database access for workflow run persistence. |
 | `orchestration/services/workflow_service.py` | Coordinates agent execution, graph invocation, and workflow run tracking. |
 | `api/main.py` | FastAPI application and router registration. |
-| `api/routes/workflows.py` | Workflow start, resume, list, and status endpoints. |
+| `api/routes/workflows.py` | Workflow start, resume, list, status, and delete endpoints. |
+| `api/routes/evals.py` | Eval run (background task) and result polling endpoints. |
 | `evals/run_evals.py` | Evaluation runner for regression testing. |
 | `evals/scoring.py` | Field-level expected-versus-actual scoring. |
 
@@ -435,11 +449,8 @@ Completed:
 - Human approvals
 - PostgreSQL checkpoint persistence
 - Workflow runs database
-- FastAPI service layer (health, agent, workflow endpoints)
-
-In progress:
-
-- Next.js operator dashboard
+- FastAPI service layer (health, agent, workflow, evals endpoints)
+- Next.js operator dashboard (workflow list, detail, approve/reject, evals tab)
 
 Planned:
 
@@ -460,7 +471,7 @@ The project expects:
 
 - A local PostgreSQL database named `incident_management`
 - Incident and event tables compatible with `agent/tools/incident_tools.py`
-- An Anthropic API key available in the environment for the planner model
+- An Anthropic API key in a `.env` file at the project root (`ANTHROPIC_API_KEY=sk-ant-...`)
 - LangGraph checkpoint tables initialized (run `database/scripts/setup_postgres_checkpointer.py` once)
 - Workflow runs table initialized (run `database/scripts/create_workflow_runs_table.py` once)
 
@@ -470,11 +481,21 @@ Start the API server:
 uvicorn api.main:app --reload
 ```
 
-Run the evaluation harness:
+Start the Next.js operator dashboard:
+
+```bash
+cd nextjs && npm run dev
+```
+
+The dashboard runs on `http://localhost:3000` and proxies API calls to uvicorn on port 8000.
+
+Run the evaluation harness directly (CLI):
 
 ```bash
 python evals/run_evals.py
 ```
+
+Evals can also be triggered from the dashboard under the Evaluations tab.
 
 Run the LangGraph workflow example directly:
 
@@ -506,7 +527,7 @@ orchestration/
 
 api/
   main.py                  FastAPI application and router registration
-  routes/                  health, agent, and workflow endpoints
+  routes/                  health, agent, workflow, and evals endpoints
   schemas/                 Request and response Pydantic models
 
 database/
@@ -518,7 +539,7 @@ evals/
   run_evals.py             Evaluation runner
   scoring.py               Expected versus actual comparison
 
-nextjs/                    Operator dashboard (in progress)
+nextjs/                    Operator dashboard (workflow list, detail, approve/reject, evals tab)
 ```
 
 ## Design Status
@@ -528,8 +549,8 @@ The current implementation covers the core architecture, control flow, and servi
 - Checkpointing uses PostgreSQL persistence via `PostgresSaver`, surviving process restarts.
 - Workflow runs are tracked in a `workflow_runs` table with status and timestamps.
 - Logs are emitted to stdout as structured JSON.
-- The evaluation harness is custom and lightweight.
-- The FastAPI layer is functional for workflow start, resume, and status queries.
-- The Next.js operator dashboard is started but not yet feature complete.
+- The evaluation harness is custom and lightweight, runnable from CLI or the dashboard.
+- The FastAPI layer covers workflow lifecycle, agent execution, and eval job management.
+- The Next.js operator dashboard is complete: workflow list, workflow detail, approve/reject, and evaluations tab.
 
-These choices leave a clear path toward richer observability, authenticated APIs, workflow visualization, and a full operator dashboard.
+These choices leave a clear path toward richer observability, authenticated APIs, workflow visualization, and a Docker deployment.
