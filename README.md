@@ -6,6 +6,12 @@ The project started as a ReAct-style agent that could retrieve incident data thr
 
 The system is structured around production-oriented design patterns without claiming to be a fully deployed operations platform. Its focus is agent state management, durable workflow design, human-in-the-loop routing, evaluation harnesses, and observable tool execution.
 
+## Demo
+
+**Human-in-the-loop approval flow** — high-severity incident triggers a workflow pause, waits for human approval, then generates the final report.
+
+![Human-in-the-loop approval flow](https://i.imgur.com/t349DJZ.gif)
+
 ## Current Capabilities
 
 ### ReAct Agent
