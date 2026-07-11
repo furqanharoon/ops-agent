@@ -7,7 +7,9 @@ from agent.runtime import run_agent_execution_debug
 from langgraph.checkpoint.postgres import PostgresSaver
 from orchestration.repositories.workflow_repository import create_workflow_run, update_workflow_status, get_all_workflows, get_workflow, delete_workflow
 
-DB_URI = "postgresql://postgres@localhost/incident_management"
+import os
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_URI = f"postgresql://postgres@{DB_HOST}/incident_management"
 
 async def start_workflow(case_id: str):
   query = f"Investigate {case_id}"
