@@ -10,7 +10,7 @@ The system is structured around production-oriented design patterns without clai
 
 **Human-in-the-loop approval flow** — high-severity incident triggers a workflow pause, waits for human approval, then generates the final report.
 
-![Human-in-the-loop approval flow](https://i.imgur.com/t349DJZ.gif)
+![Human-in-the-loop approval flow](assets/ops_agent_hitl.gif)
 
 ## Current Capabilities
 
