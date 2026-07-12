@@ -457,12 +457,12 @@ Completed:
 - Workflow runs database
 - FastAPI service layer (health, agent, workflow, evals endpoints)
 - Next.js operator dashboard (workflow list, detail, approve/reject, evals tab)
+- Docker deployment (FastAPI and Next.js Dockerfiles)
 
 Planned:
 
 - Workflow visualization
 - Authentication
-- Docker deployment
 - Workflow observability dashboard
 
 ## Running Locally
@@ -494,6 +494,22 @@ cd nextjs && npm run dev
 ```
 
 The dashboard runs on `http://localhost:3000` and proxies API calls to uvicorn on port 8000.
+
+### Docker
+
+Build and run the FastAPI backend:
+
+```bash
+docker build -t ops-agent-api .
+docker run -p 8000:8000 -e DB_HOST=host.docker.internal --env-file .env ops-agent-api
+```
+
+Build and run the Next.js operator dashboard:
+
+```bash
+docker build -t ops-agent-dashboard ./nextjs
+docker run -p 3000:3000 -e BACKEND_API_BASE_URL=http://host.docker.internal:8000 ops-agent-dashboard
+```
 
 Run the evaluation harness directly (CLI):
 
