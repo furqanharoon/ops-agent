@@ -80,7 +80,7 @@ export default function DashboardPage() {
               aria-label="Case ID"
               value={caseId}
               onChange={(event) => setCaseId(event.target.value)}
-              placeholder="INC24493"
+              placeholder="Enter CaseID"
               disabled={startWorkflow.isPending}
             />
             <Button className="sm:w-44" disabled={startWorkflow.isPending || caseId.trim().length === 0}>
