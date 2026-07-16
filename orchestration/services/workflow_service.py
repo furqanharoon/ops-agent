@@ -43,6 +43,7 @@ async def start_workflow(case_id: str):
           }
         }
       )
+      update_workflow_status(thread_id, "completed")
     except GraphInterrupt:
       snapshot = graph.get_state({"configurable": {"thread_id": thread_id}})
       result = snapshot.values
@@ -62,7 +63,6 @@ async def resume_workflow(
   }
   if rejection_reason:
     resume_payload["rejection_reason"] = rejection_reason
-  update_workflow_status(thread_id, approval_status)
   with PostgresSaver.from_conn_string(DB_URI) as checkpointer:
     graph = get_graph(checkpointer)
     resume_result = graph.invoke(
@@ -75,6 +75,7 @@ async def resume_workflow(
         }
       }
     )
+    update_workflow_status(thread_id, approval_status)
     print(resume_result)
   
   return {
